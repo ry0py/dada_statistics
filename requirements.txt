@@ -1,3 +1,4 @@
 streamlit
 easyocr
 altair
+pytesseract
