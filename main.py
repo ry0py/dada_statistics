@@ -5,10 +5,11 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import cv2
+import easyocr
 import pytesseract
 import re
 
-
+reader = easyocr.Reader(['ja','en'])
 st.title('Streamlit 超入門')
 st.write("Hello from Streamlit!")
 
@@ -27,9 +28,6 @@ if uploaded_file is not None:
     st.write("Image shape:", img.shape)
     hand_crop = img[600:2100, 60:1130]
     st.image(hand_crop, caption="Hand region")
-    # extracted_text = pytesseract.image_to_string(hand_crop, lang='eng')
-    # name_match = re.search(r'[A-Za-z]+', extracted_text)
-    # number_match = re.findall(r'\d+', extracted_text)
-    # st.write("Name:", name_match.group(0) if name_match else "N/A")
-    # st.write("Numbers:", number_match if number_match else "N/A")
-    # st.image(hand_crop, caption="Hand region")
+    result = reader.readtext(np.array(hand_crop))
+    for (bbox, text, prob) in result:
+        st.write(text)

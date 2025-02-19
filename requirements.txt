@@ -1,2 +1,4 @@
-opencv-python==4.6.0.66
-streamlit==1.12.2
+opencv-python
+streamlit
+easyocr
+altair
