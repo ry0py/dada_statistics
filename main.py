@@ -4,7 +4,6 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from PIL import Image
-import cv2
 import easyocr
 import pytesseract
 import re
@@ -23,7 +22,7 @@ st.sidebar.write("Sidebar content")
 uploaded_file = st.file_uploader("Choose an image...", type="jpg, png")
 if uploaded_file is not None:
     data = np.frombuffer(uploaded_file.read(), np.uint8)
-    img = cv2.imdecode(data, cv2.IMREAD_COLOR)
+    img = np.array(Image.open(uploaded_file))
     # imgの幅と高さを取得
     st.write("Image shape:", img.shape)
     hand_crop = img[600:2100, 60:1130]
