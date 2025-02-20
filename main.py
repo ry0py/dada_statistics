@@ -19,6 +19,8 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.write("アップロードされた画像:")
     st.image(image, caption="Uploaded Image", use_column_width=True)
+    # 画像を切り取るコード
+    image = image.crop((100, 100, 200, 200))
     
     # 画像のサイズは取得
     width, height = image.size
