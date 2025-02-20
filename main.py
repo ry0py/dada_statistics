@@ -17,10 +17,14 @@ uploaded_file = st.file_uploader("画像ファイルをアップロード", type
 if uploaded_file is not None:
     # 画像読み込み
     image = Image.open(uploaded_file)
-    st.write("アップロードされた画像:")
     st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.write("アップロードされた画像:")
     # 画像を切り取るコード
-    image = image.crop((60, 600, 1130, 2100))
+    # 左上が0で左、上、右、下の順で座標を指定
+    image = image.crop((285, 700, 810, 800))
+    # for i in range(1, 10):
+    #     image = image.crop((0, 0, 1070, 2000))
+    st.image(image, caption="Uploaded Image", use_column_width=True)
     
     # 画像のサイズは取得
     width, height = image.size
