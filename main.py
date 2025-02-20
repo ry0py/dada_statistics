@@ -20,7 +20,7 @@ if uploaded_file is not None:
     st.write("アップロードされた画像:")
     st.image(image, caption="Uploaded Image", use_column_width=True)
     # 画像を切り取るコード
-    image = image.crop((100, 100, 200, 200))
+    image = image.crop((60, 600, 1130, 2100))
     
     # 画像のサイズは取得
     width, height = image.size
