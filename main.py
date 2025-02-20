@@ -17,7 +17,7 @@ uploaded_file = st.file_uploader("画像ファイルをアップロード", type
 if uploaded_file is not None:
     # 画像読み込み
     image = Image.open(uploaded_file)
-    image = image.crop((60, 600, 1130, 2100))
+    # image = image.crop((60, 600, 1130, 2100))
 
     # Tesseract で日本語 OCR
     # 日本語の言語データがインストールされている場合、lang="jpn" を指定
