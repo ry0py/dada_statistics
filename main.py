@@ -17,6 +17,8 @@ uploaded_file = st.file_uploader("画像ファイルをアップロード", type
 if uploaded_file is not None:
     # 画像読み込み
     image = Image.open(uploaded_file)
+    st.write("アップロードされた画像:")
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
     # Tesseract で日本語 OCR
     # 日本語の言語データがインストールされている場合、lang="jpn" を指定
