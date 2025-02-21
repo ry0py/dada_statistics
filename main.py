@@ -15,26 +15,30 @@ st.write("""
 st.write("画像には名前が7つ入っていることを前提としています")
 
 uploaded_file = st.file_uploader("画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
-names = []
 if uploaded_file is not None:
     # 画像読み込み
-    image = Image.open(uploaded_file)
-    # st.image(image, caption="Uploaded Image", use_column_width=True)
+    base_image = Image.open(uploaded_file)
+    st.image(base_image, caption="Uploaded Image")
     st.write("アップロードされた画像:")
 
-    # 画像を切り取る (左, 上, 右, 下)
-    # 必要に応じて座標は調整してください
-    extracted_images = utils.extract_name_images(image)
-    print(len(extracted_images))
     st.write("切り取られた画像:")
-    for i, img in enumerate(extracted_images):
+    # 名前の抽出
+    extracted_names_images = utils.extract_name_images(base_image)
+    names = []
+    for i, img in enumerate(extracted_names_images):
         image = utils.pre_treatment(img)
         st.image(image, caption=f"Image {i}")
         names.append(utils.ocr_name(image))
         print(names)
-
-    # 処理後の画像を表示
-    # st.image(image, caption="Processed Image", use_column_width=True)
+    # 数字の抽出
+    extracted_number_images = utils.extract_number_images(base_image)
+    numbers = []
+    for i, img in enumerate(extracted_number_images):
+        image = img
+        image = utils.pre_treatment(img)
+        st.image(image, caption=f"Image {i}")
+        numbers.append(utils.ocr_name(image))
+        print(numbers)
 
     # 画像のサイズ取得（確認用）
     width, height = image.size
@@ -42,8 +46,8 @@ if uploaded_file is not None:
 
 
     st.write("抽出されたテキスト:")
-    for name in names:
-        st.write(name)
+    for i in range(len(names)):
+        st.write(f"{names[i]}:{numbers[i]}")
 
     # # 正規表現で「名前 + 数字」を抽出
     # # 例: 「たむちゃん 76」のような形を想定
