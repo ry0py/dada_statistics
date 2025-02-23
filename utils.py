@@ -1,6 +1,7 @@
 from PIL import Image, ImageFilter, ImageOps
 import pytesseract
-def extract_name_images(image):
+# extract系はすべてまとめられるけど面倒だからいいや
+def extract_expedition_name_images(image):
     step_height = 130
     step_width = 510
     init_width = 290
@@ -9,7 +10,7 @@ def extract_name_images(image):
         init_height = 700 + i*210
         images.append(image.crop((init_width, init_height, init_width + step_width, init_height + step_height)))
     return images
-def extract_number_images(image):
+def extract_expedition_score_images(image):
     step_height = 120
     step_width = 100
     init_width = 925
@@ -18,6 +19,8 @@ def extract_number_images(image):
         init_height = 700 + i*210
         images.append(image.crop((init_width, init_height, init_width + step_width, init_height + step_height)))
     return images
+
+
 def pre_treatment(image):
     # 1. グレースケール化
     new_image = image.convert("L")

@@ -6,6 +6,7 @@ import pandas as pd
 import re
 import io
 import utils
+import requests
 
 st.title("画像から名前と数値を抽出するアプリ")
 
@@ -26,45 +27,116 @@ def connect_gsheet():
     spreadsheet = gc.open_by_key(SPREADSHEET_KEY)
     return spreadsheet
 
+tab1, tab2, tab3 = st.tabs(["遠征スコア", "探索スコア", "その他"])
 
-uploaded_file = st.file_uploader("画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
-if uploaded_file is not None:
-    # 画像読み込み
-    base_image = Image.open(uploaded_file)
-    st.image(base_image, caption="Uploaded Image")
-    st.write("アップロードされた画像:")
+with tab1:
+    st.write("遠征スコア")
+    uploaded_file = st.file_uploader("遠征スコアの画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        # 画像読み込み
+        base_image = Image.open(uploaded_file)
+        st.image(base_image, caption="Uploaded Image")
+        st.write("アップロードされた画像:")
 
-    st.write("切り取られた画像:")
-    # 名前の抽出
-    extracted_names_images = utils.extract_name_images(base_image)
-    names = []
-    for i, img in enumerate(extracted_names_images):
-        image = utils.pre_treatment(img)
-        st.image(image, caption=f"Image {i}")
-        names.append(utils.ocr_name(image))
-        print(names)
-    # 数字の抽出
-    extracted_number_images = utils.extract_number_images(base_image)
-    numbers = []
-    for i, img in enumerate(extracted_number_images):
-        image = img
-        image = utils.pre_treatment(img)
-        st.image(image, caption=f"Image {i}")
-        numbers.append(utils.ocr_name(image))
+        st.write("切り取られた画像:")
+        # 名前の抽出
+        extracted_names_images = utils.extract_expedition_name_images(base_image)
+        names = []
+        for i, img in enumerate(extracted_names_images):
+            image = utils.pre_treatment(img)
+            st.image(image, caption=f"Image {i}")
+            names.append(utils.ocr_name(image))
+            print(names)
+        # 数字の抽出
+        extracted_number_images = utils.extract_expedition_name_images(base_image)
+        expedition_scores = []
+        for i, img in enumerate(extracted_number_images):
+            image = img
+            image = utils.pre_treatment(img)
+            st.image(image, caption=f"Image {i}")
+            expedition_scores.append(utils.ocr_name(image))
 
-    # 画像のサイズ取得（確認用）
-    width, height = image.size
-    st.write(f"画像のサイズ: {width} x {height}")
+        # 画像のサイズ取得（確認用）
+        width, height = image.size
+        st.write(f"画像のサイズ: {width} x {height}")
 
-    # データまとめ
-    df = pd.DataFrame({
-        "名前": names,
-        "数字": numbers
-    })
-    st.session_state.df = df
-    spreadsheet = connect_gsheet()
-    worksheet = spreadsheet.sheet1
-    set_with_dataframe(worksheet, df)
-    st.dataframe(df)
-    # リンクを張る https://docs.google.com/spreadsheets/d/1RYhxfQdzFATlLyydsCxeWcB5IIuB3vqxe5-5AymvZ3I/edit?gid=0#gid=0
-    st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
+        # データまとめ
+        df = pd.DataFrame({
+            "名前": names,
+            "遠征スコア": expedition_scores
+        })
+        st.session_state.df = df
+        spreadsheet = connect_gsheet()
+        worksheet = spreadsheet.sheet1
+        set_with_dataframe(worksheet, df)
+        st.dataframe(df)
+        # リンクを張る https://docs.google.com/spreadsheets/d/1RYhxfQdzFATlLyydsCxeWcB5IIuB3vqxe5-5AymvZ3I/edit?gid=0#gid=0
+        st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
+
+with tab2:
+    st.title("探索スコア")
+    uploaded_file = st.file_uploader("探索スコアの画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        # 画像読み込み
+        base_image = Image.open(uploaded_file)
+        st.image(base_image, caption="Uploaded Image")
+        st.write("アップロードされた画像:")
+
+        st.write("切り取られた画像:")
+        # 名前の抽出
+        extracted_names_images = utils.extract_expedition_name_images(base_image)
+        names = []
+        for i, img in enumerate(extracted_names_images):
+            image = utils.pre_treatment(img)
+            st.image(image, caption=f"Image {i}")
+            names.append(utils.ocr_name(image))
+            print(names)
+        # 数字の抽出
+        extracted_number_images = utils.extract_expedition_name_images(base_image)
+        expedition_scores = []
+        for i, img in enumerate(extracted_number_images):
+            image = img
+            image = utils.pre_treatment(img)
+            st.image(image, caption=f"Image {i}")
+            expedition_scores.append(utils.ocr_name(image))
+
+        # 画像のサイズ取得（確認用）
+        width, height = image.size
+        st.write(f"画像のサイズ: {width} x {height}")
+
+        # データまとめ
+        df = pd.DataFrame({
+            "名前": names,
+            "遠征スコア": expedition_scores
+        })
+        st.session_state.df = df
+        spreadsheet = connect_gsheet()
+        worksheet = spreadsheet.sheet1
+        set_with_dataframe(worksheet, df)
+        st.dataframe(df)
+        # リンクを張る https://docs.google.com/spreadsheets/d/1RYhxfQdzFATlLyydsCxeWcB5IIuB3vqxe5-5AymvZ3I/edit?gid=0#gid=0
+        st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
+with tab3:
+    st.title("猫の画像生成アプリ")
+
+    # The Cat API を使って画像を取得
+    response = requests.get("https://api.thecatapi.com/v1/images/search")
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            # 画像のURLを取得
+            image_url = data[0]["url"]
+            st.write("画像URL:", image_url)
+            # URLを直接st.imageに渡すか、画像をバイナリで取得して表示する方法のどちらかを選べます
+
+            # 方法1: URLを直接渡す
+            st.image(image_url, caption="Generated Cat Image", use_column_width=True)
+
+            # 方法2: バイナリデータとして取得して表示する場合
+            # image_response = requests.get(image_url)
+            # if image_response.status_code == 200:
+            #     image_bytes = io.BytesIO(image_response.content)
+            #     image = Image.open(image_bytes)
+            #     st.image(image, caption="Generated Cat Image", use_column_width=True)
+    else:
+        st.error("猫の画像を取得できませんでした。")
