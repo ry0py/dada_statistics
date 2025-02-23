@@ -1,6 +1,7 @@
 import streamlit as st
+import gspread
+from gspread_dataframe import set_with_dataframe
 from PIL import Image, ImageFilter
-import pytesseract
 import pandas as pd
 import re
 import io
@@ -13,6 +14,18 @@ st.write("""
 表示・Excel 形式でダウンロードできるようにします。
 """)
 st.write("画像には名前が7つ入っていることを前提としています")
+
+# スプレッドシートに接続
+# https://docs.streamlit.io/develop/tutorials/databases/private-gsheet に書いてある
+def connect_gsheet():
+    creds_info = st.secrets["gcp_service_account"]
+    # 認証情報を使って Google Sheets API に接続
+    gc = gspread.service_account_from_dict(creds_info)
+    # # 書き込み対象のスプレッドシートキーまたは URL を指定
+    SPREADSHEET_KEY = creds_info["spreadsheet_key"]  # secrets.toml に設定しておく
+    spreadsheet = gc.open_by_key(SPREADSHEET_KEY)
+    return spreadsheet
+
 
 uploaded_file = st.file_uploader("画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
 if uploaded_file is not None:
@@ -38,48 +51,20 @@ if uploaded_file is not None:
         image = utils.pre_treatment(img)
         st.image(image, caption=f"Image {i}")
         numbers.append(utils.ocr_name(image))
-        print(numbers)
 
     # 画像のサイズ取得（確認用）
     width, height = image.size
     st.write(f"画像のサイズ: {width} x {height}")
 
-
-    st.write("抽出されたテキスト:")
-    for i in range(len(names)):
-        st.write(f"{names[i]}:{numbers[i]}")
-
-    # # 正規表現で「名前 + 数字」を抽出
-    # # 例: 「たむちゃん 76」のような形を想定
-    # # 必要に応じてパターンは調整してください
-    # pattern = re.compile(r"([\u3040-\u309F\u30A0-\u30FF\uFF00-\uFF9F\u4E00-\u9FFF]+)\s*(\d+)")
-    # matches = pattern.findall(text)
-
-    # if matches:
-    #     # リストを DataFrame に変換
-    #     df = pd.DataFrame(matches, columns=["名前", "数値"])
-    #     st.write("抽出結果:")
-    #     st.dataframe(df)
-
-    #     # Excel ファイルとしてダウンロードできるようにバイナリを用意
-    #     excel_buffer = io.BytesIO()
-    #     with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-    #         df.to_excel(writer, index=False, sheet_name="Sheet1")
-
-    #     st.download_button(
-    #         label="Excelファイルをダウンロード",
-    #         data=excel_buffer.getvalue(),
-    #         file_name="extracted_data.xlsx",
-    #         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    #     )
-
-    #     # CSV ダウンロード
-    #     csv_data = df.to_csv(index=False)
-    #     st.download_button(
-    #         label="CSVファイルをダウンロード",
-    #         data=csv_data,
-    #         file_name="extracted_data.csv",
-    #         mime="text/csv"
-    #     )
-    # else:
-    #     st.warning("名前と数字のペアが見つかりませんでした。")
+    # データまとめ
+    df = pd.DataFrame({
+        "名前": names,
+        "数字": numbers
+    })
+    st.session_state.df = df
+    spreadsheet = connect_gsheet()
+    worksheet = spreadsheet.sheet1
+    set_with_dataframe(worksheet, df)
+    st.dataframe(df)
+    # リンクを張る https://docs.google.com/spreadsheets/d/1RYhxfQdzFATlLyydsCxeWcB5IIuB3vqxe5-5AymvZ3I/edit?gid=0#gid=0
+    st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")

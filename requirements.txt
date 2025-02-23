@@ -3,3 +3,5 @@ pillow
 pytesseract
 openpyxl
 pandas
+gspread
+gspread_dataframe
