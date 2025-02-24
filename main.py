@@ -1,6 +1,6 @@
 import streamlit as st
 import gspread
-from gspread_dataframe import set_with_dataframe
+from gspread_dataframe import set_with_dataframe, get_as_dataframe
 from PIL import Image, ImageFilter
 import pandas as pd
 import re
@@ -16,6 +16,7 @@ st.write("""
 """)
 st.write("画像には名前が7つ入っていることを前提としています")
 
+
 # スプレッドシートに接続
 # https://docs.streamlit.io/develop/tutorials/databases/private-gsheet に書いてある
 def connect_gsheet():
@@ -27,6 +28,10 @@ def connect_gsheet():
     spreadsheet = gc.open_by_key(SPREADSHEET_KEY)
     return spreadsheet
 
+# 初期化処理
+df = get_as_dataframe(connect_gsheet().worksheet("Template"))
+st.session_state.df = df.iloc[:39, :]
+st.dataframe(st.session_state.df)
 tab1, tab2, tab3 = st.tabs(["遠征スコア", "探索スコア", "その他"])
 
 with tab1:
@@ -118,25 +123,16 @@ with tab2:
         st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
 with tab3:
     st.title("猫の画像生成アプリ")
-
-    # The Cat API を使って画像を取得
-    response = requests.get("https://api.thecatapi.com/v1/images/search")
-    if response.status_code == 200:
-        data = response.json()
-        if data:
-            # 画像のURLを取得
-            image_url = data[0]["url"]
-            st.write("画像URL:", image_url)
-            # URLを直接st.imageに渡すか、画像をバイナリで取得して表示する方法のどちらかを選べます
-
-            # 方法1: URLを直接渡す
-            st.image(image_url, caption="Generated Cat Image", use_column_width=True)
-
-            # 方法2: バイナリデータとして取得して表示する場合
-            # image_response = requests.get(image_url)
-            # if image_response.status_code == 200:
-            #     image_bytes = io.BytesIO(image_response.content)
-            #     image = Image.open(image_bytes)
-            #     st.image(image, caption="Generated Cat Image", use_column_width=True)
-    else:
-        st.error("猫の画像を取得できませんでした。")
+    # ボタンを押すと猫の画像を生成
+    if st.button("猫の画像を生成"):
+        # The Cat API を使って画像を取得
+        response = requests.get("https://api.thecatapi.com/v1/images/search")
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                # 画像のURLを取得
+                image_url = data[0]["url"]
+                st.write("画像URL:", image_url)
+                st.image(image_url, caption="Generated Cat Image")
+        else:
+            st.error("猫の画像を取得できませんでした。")

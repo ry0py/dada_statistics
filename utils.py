@@ -60,3 +60,4 @@ def ocr_name(image):
     # 日本語の言語データがインストールされている場合、lang="jpn" を指定
     text = pytesseract.image_to_string(image, lang="jpn", config=custom_config)
     return text
+
