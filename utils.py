@@ -11,12 +11,32 @@ def extract_expedition_name_images(image):
         images.append(image.crop((init_width, init_height, init_width + step_width, init_height + step_height)))
     return images
 def extract_expedition_score_images(image):
-    step_height = 120
+    step_height = 130
     step_width = 100
     init_width = 925
     images =[]
     for i in range (7):
         init_height = 700 + i*210
+        images.append(image.crop((init_width, init_height, init_width + step_width, init_height + step_height)))
+    return images
+
+def extract_search_name_images(image):
+    step_height = 130
+    step_width = 315
+    init_width = 450
+    images =[]
+    for i in range (5):
+        init_height = 900 + i*210
+        images.append(image.crop((init_width, init_height, init_width + step_width, init_height + step_height)))
+    return images
+
+def extract_search_score_images(image):
+    step_height = 130
+    step_width = 150
+    init_width = 850
+    images =[]
+    for i in range (5):
+        init_height = 900 + i*210
         images.append(image.crop((init_width, init_height, init_width + step_width, init_height + step_height)))
     return images
 

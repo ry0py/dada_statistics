@@ -40,17 +40,17 @@ with tab1:
 
         st.write("切り取られた画像:")
         # 名前の抽出
-        extracted_names_images = utils.extract_expedition_name_images(base_image)
+        extract_expedition_name_images = utils.extract_expedition_name_images(base_image)
         names = []
-        for i, img in enumerate(extracted_names_images):
+        for i, img in enumerate(extract_expedition_name_images):
             image = utils.pre_treatment(img)
             st.image(image, caption=f"Image {i}")
             names.append(utils.ocr_name(image))
             print(names)
         # 数字の抽出
-        extracted_number_images = utils.extract_expedition_name_images(base_image)
+        extract_expedition_score_images = utils.extract_expedition_score_images(base_image)
         expedition_scores = []
-        for i, img in enumerate(extracted_number_images):
+        for i, img in enumerate(extract_expedition_score_images):
             image = img
             image = utils.pre_treatment(img)
             st.image(image, caption=f"Image {i}")
@@ -84,17 +84,17 @@ with tab2:
 
         st.write("切り取られた画像:")
         # 名前の抽出
-        extracted_names_images = utils.extract_expedition_name_images(base_image)
+        extract_search_name_images = utils.extract_search_name_images(base_image)
         names = []
-        for i, img in enumerate(extracted_names_images):
+        for i, img in enumerate(extract_search_name_images):
             image = utils.pre_treatment(img)
             st.image(image, caption=f"Image {i}")
             names.append(utils.ocr_name(image))
             print(names)
         # 数字の抽出
-        extracted_number_images = utils.extract_expedition_name_images(base_image)
+        extract_search_score_images = utils.extract_search_score_images(base_image)
         expedition_scores = []
-        for i, img in enumerate(extracted_number_images):
+        for i, img in enumerate(extract_search_score_images):
             image = img
             image = utils.pre_treatment(img)
             st.image(image, caption=f"Image {i}")
