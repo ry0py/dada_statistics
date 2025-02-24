@@ -37,72 +37,69 @@ tab1, tab2, tab3, tab4 = st.tabs(["遠征スコア", "探索スコア","スプ�
 
 with tab1:
     st.title("遠征スコア")
-    uploaded_file = st.file_uploader("遠征スコアの画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
-    if uploaded_file is not None:
-        # 画像読み込み
-        base_image = Image.open(uploaded_file)
-        # st.image(base_image, caption="Uploaded Image")
-        # 名前の抽出
-        extract_expedition_name_images = utils.extract_expedition_name_images(base_image)
-        names = []
-        for i, img in enumerate(extract_expedition_name_images):
-            image = utils.pre_treatment(img)
-            names.append(utils.ocr_name(image))
-        # 数字の抽出
-        extract_expedition_score_images = utils.extract_expedition_score_images(base_image)
-        expedition_scores = []
-        for i, img in enumerate(extract_expedition_score_images):
-            image = img
-            image = utils.pre_treatment(img)
-            expedition_scores.append(utils.ocr_name(image))
+    names = []
+    expedition_scores = []
+    uploaded_files = st.file_uploader("遠征スコアの画像ファイルをアップロード", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+    for uploaded_file in uploaded_files:
+        if uploaded_file is not None:
+            # 画像読み込み
+            base_image = Image.open(uploaded_file)
+            # 名前の抽出
+            extract_expedition_name_images = utils.extract_expedition_name_images(base_image)
+            for i, img in enumerate(extract_expedition_name_images):
+                image = utils.pre_treatment(img)
+                names.append(utils.ocr_name(image))
+            # 数字の抽出
+            extract_expedition_score_images = utils.extract_expedition_score_images(base_image)
 
-        # 画像のサイズ取得（確認用）
-        width, height = image.size
-        st.write(f"画像のサイズ: {width} x {height}")
+            for i, img in enumerate(extract_expedition_score_images):
+                image = img
+                image = utils.pre_treatment(img)
+                expedition_scores.append(utils.ocr_name(image))
 
-        # データまとめ
-        df_expedition = pd.DataFrame({
-            "ユーザ名": names,
-            "遠征ボス証": expedition_scores
-        })
-        st.session_state["df_expedition"] = df_expedition
-        st.dataframe(df_expedition)
+            # 画像のサイズ取得（確認用）
+            width, height = image.size
+
+            # データまとめ
+    df_expedition = pd.DataFrame({
+        "ユーザ名": names,
+        "遠征ボス証": expedition_scores
+    })
+    st.session_state["df_expedition"] = df_expedition
+    st.dataframe(df_expedition)
 
 with tab2:
     st.title("探索スコア")
-    uploaded_file = st.file_uploader("探索スコアの画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
-    if uploaded_file is not None:
-        # 画像読み込み
-        base_image = Image.open(uploaded_file)
-        st.image(base_image, caption="Uploaded Image")
-        st.write("アップロードされた画像:")
+    names = []
+    search_scores = []
+    uploaded_files = st.file_uploader("探索スコアの画像ファイルをアップロード", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+    for uploaded_file in uploaded_files:
+        if uploaded_file is not None:
+            # 画像読み込み
+            base_image = Image.open(uploaded_file)
+            # 名前の抽出
+            extract_search_name_images = utils.extract_search_name_images(base_image)
+            for i, img in enumerate(extract_search_name_images):
+                image = utils.pre_treatment(img)
 
-        st.write("切り取られた画像:")
-        # 名前の抽出
-        extract_search_name_images = utils.extract_search_name_images(base_image)
-        names = []
-        for i, img in enumerate(extract_search_name_images):
-            image = utils.pre_treatment(img)
+                names.append(utils.ocr_name(image))
+            # 数字の抽出
+            extract_search_score_images = utils.extract_search_score_images(base_image)
+            for i, img in enumerate(extract_search_score_images):
+                image = img
+                image = utils.pre_treatment(img)
+                search_scores.append(utils.ocr_name(image))
 
-            names.append(utils.ocr_name(image))
-        # 数字の抽出
-        extract_search_score_images = utils.extract_search_score_images(base_image)
-        search_scores = []
-        for i, img in enumerate(extract_search_score_images):
-            image = img
-            image = utils.pre_treatment(img)
-            search_scores.append(utils.ocr_name(image))
+            # 画像のサイズ取得（確認用）
+            width, height = image.size
 
-        # 画像のサイズ取得（確認用）
-        width, height = image.size
-
-        # データまとめ
-        df_search = pd.DataFrame({
-            "ユーザ名": names,
-            "探索バッヂ": search_scores
-        })
-        st.session_state["df_search"] = df_search
-        st.dataframe(df_search)
+    # データまとめ
+    df_search = pd.DataFrame({
+        "ユーザ名": names,
+        "探索バッヂ": search_scores
+    })
+    st.session_state["df_search"] = df_search
+    st.dataframe(df_search)
 
 with tab3:
     st.title("スプレッドシート取得")
@@ -114,13 +111,12 @@ with tab3:
         if st.button("データを合体して表示"):
             df_expedition = st.session_state["df_expedition"]
             df_search = st.session_state["df_search"]
-            df = pd.concat([df_expedition, df_search], axis=0)
+            df = pd.merge(df_expedition, df_search, on="ユーザ名", how="outer")
             df = df.drop_duplicates("ユーザ名")
             st.dataframe(df)
             spreadsheet = connect_gsheet()
             worksheet_read = spreadsheet.worksheet("Template")
             df_tmp = get_as_dataframe(worksheet_read).iloc[:40, :].copy()
-            st.write(df_tmp)
             min_len = min(len(df_tmp), len(df))
 
             df_tmp.iloc[:min_len, df_tmp.columns.get_indexer(["ユーザ名", "遠征ボス証", "探索バッヂ"])] = \
@@ -129,8 +125,8 @@ with tab3:
                 df_tmp.loc[len(df):, "ユーザ名"] = None
                 df_tmp.loc[len(df):, "遠征ボス証"] = 0
                 df_tmp.loc[len(df):, "探索バッヂ"] = 0
-            st.write(df_tmp)
             worksheet_write = spreadsheet.sheet1
+            worksheet_write.clear()
             set_with_dataframe(worksheet_write, df_tmp)
             st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
 with tab4:
