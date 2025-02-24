@@ -18,7 +18,7 @@ st.write("画像には名前が7つ入っていることを前提としていま
 
 
 # スプレッドシートに接続
-# https://docs.streamlit.io/develop/tutorials/databases/private-gsheet に書いてある
+# https://docs.streamlit.io/develop/tutorials/databases/vate-gsheet に書いてある
 def connect_gsheet():
     creds_info = st.secrets["gcp_service_account"]
     # 認証情報を使って Google Sheets API に接続
@@ -29,36 +29,31 @@ def connect_gsheet():
     return spreadsheet
 
 # 初期化処理
-df = get_as_dataframe(connect_gsheet().worksheet("Template"))
-st.session_state.df = df.iloc[:39, :]
-st.dataframe(st.session_state.df)
-tab1, tab2, tab3 = st.tabs(["遠征スコア", "探索スコア", "その他"])
+
+# df = get_as_dataframe(connect_gsheet().worksheet("Template"))
+# st.session_state.df = df.iloc[:40, :]
+
+tab1, tab2, tab3, tab4 = st.tabs(["遠征スコア", "探索スコア","スプレッドシート取得","その他"])
 
 with tab1:
-    st.write("遠征スコア")
+    st.title("遠征スコア")
     uploaded_file = st.file_uploader("遠征スコアの画像ファイルをアップロード", type=["png", "jpg", "jpeg"])
     if uploaded_file is not None:
         # 画像読み込み
         base_image = Image.open(uploaded_file)
-        st.image(base_image, caption="Uploaded Image")
-        st.write("アップロードされた画像:")
-
-        st.write("切り取られた画像:")
+        # st.image(base_image, caption="Uploaded Image")
         # 名前の抽出
         extract_expedition_name_images = utils.extract_expedition_name_images(base_image)
         names = []
         for i, img in enumerate(extract_expedition_name_images):
             image = utils.pre_treatment(img)
-            st.image(image, caption=f"Image {i}")
             names.append(utils.ocr_name(image))
-            print(names)
         # 数字の抽出
         extract_expedition_score_images = utils.extract_expedition_score_images(base_image)
         expedition_scores = []
         for i, img in enumerate(extract_expedition_score_images):
             image = img
             image = utils.pre_treatment(img)
-            st.image(image, caption=f"Image {i}")
             expedition_scores.append(utils.ocr_name(image))
 
         # 画像のサイズ取得（確認用）
@@ -66,17 +61,12 @@ with tab1:
         st.write(f"画像のサイズ: {width} x {height}")
 
         # データまとめ
-        df = pd.DataFrame({
-            "名前": names,
-            "遠征スコア": expedition_scores
+        df_expedition = pd.DataFrame({
+            "ユーザ名": names,
+            "遠征ボス証": expedition_scores
         })
-        st.session_state.df = df
-        spreadsheet = connect_gsheet()
-        worksheet = spreadsheet.sheet1
-        set_with_dataframe(worksheet, df)
-        st.dataframe(df)
-        # リンクを張る https://docs.google.com/spreadsheets/d/1RYhxfQdzFATlLyydsCxeWcB5IIuB3vqxe5-5AymvZ3I/edit?gid=0#gid=0
-        st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
+        st.session_state["df_expedition"] = df_expedition
+        st.dataframe(df_expedition)
 
 with tab2:
     st.title("探索スコア")
@@ -93,35 +83,57 @@ with tab2:
         names = []
         for i, img in enumerate(extract_search_name_images):
             image = utils.pre_treatment(img)
-            st.image(image, caption=f"Image {i}")
+
             names.append(utils.ocr_name(image))
-            print(names)
         # 数字の抽出
         extract_search_score_images = utils.extract_search_score_images(base_image)
-        expedition_scores = []
+        search_scores = []
         for i, img in enumerate(extract_search_score_images):
             image = img
             image = utils.pre_treatment(img)
-            st.image(image, caption=f"Image {i}")
-            expedition_scores.append(utils.ocr_name(image))
+            search_scores.append(utils.ocr_name(image))
 
         # 画像のサイズ取得（確認用）
         width, height = image.size
-        st.write(f"画像のサイズ: {width} x {height}")
 
         # データまとめ
-        df = pd.DataFrame({
-            "名前": names,
-            "遠征スコア": expedition_scores
+        df_search = pd.DataFrame({
+            "ユーザ名": names,
+            "探索バッヂ": search_scores
         })
-        st.session_state.df = df
-        spreadsheet = connect_gsheet()
-        worksheet = spreadsheet.sheet1
-        set_with_dataframe(worksheet, df)
-        st.dataframe(df)
-        # リンクを張る https://docs.google.com/spreadsheets/d/1RYhxfQdzFATlLyydsCxeWcB5IIuB3vqxe5-5AymvZ3I/edit?gid=0#gid=0
-        st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
+        st.session_state["df_search"] = df_search
+        st.dataframe(df_search)
+
 with tab3:
+    st.title("スプレッドシート取得")
+    if "df_expedition" not in st.session_state:
+        st.write("遠征スコアのデータがありません")
+    elif "df_search" not in st.session_state:
+        st.write("探索スコアのデータがありません")
+    else:
+        if st.button("データを合体して表示"):
+            df_expedition = st.session_state["df_expedition"]
+            df_search = st.session_state["df_search"]
+            df = pd.concat([df_expedition, df_search], axis=0)
+            df = df.drop_duplicates("ユーザ名")
+            st.dataframe(df)
+            spreadsheet = connect_gsheet()
+            worksheet_read = spreadsheet.worksheet("Template")
+            df_tmp = get_as_dataframe(worksheet_read).iloc[:40, :].copy()
+            st.write(df_tmp)
+            min_len = min(len(df_tmp), len(df))
+
+            df_tmp.iloc[:min_len, df_tmp.columns.get_indexer(["ユーザ名", "遠征ボス証", "探索バッヂ"])] = \
+    df.iloc[:min_len, df.columns.get_indexer(["ユーザ名", "遠征ボス証", "探索バッヂ"])].values
+            if len(df_tmp) > len(df):
+                df_tmp.loc[len(df):, "ユーザ名"] = None
+                df_tmp.loc[len(df):, "遠征ボス証"] = 0
+                df_tmp.loc[len(df):, "探索バッヂ"] = 0
+            st.write(df_tmp)
+            worksheet_write = spreadsheet.sheet1
+            set_with_dataframe(worksheet_write, df_tmp)
+            st.write(f"[スプレッドシート](https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit#gid=0)")
+with tab4:
     st.title("猫の画像生成アプリ")
     # ボタンを押すと猫の画像を生成
     if st.button("猫の画像を生成"):
